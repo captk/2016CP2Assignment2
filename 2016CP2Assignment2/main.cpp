@@ -61,23 +61,29 @@ int main(int argc, char* argv[]) {
         //divide and conquer - each mode has its own function.
         switch (mode) {
             case WHOLE:
-                matchWhole(pattern, word);
+                if(matchWhole(pattern, word))
+                    matches++;
                 break;
             case PREFIX:
-                matchPrefix(pattern, word);
+                if(matchPrefix(pattern, word))
+                    matches++;
                 break;
             case ANYWHERE:
-                matchAnywhere(pattern, word);
+                if(matchAnywhere(pattern, word))
+                    matches++;
                 break;
             case SUFFIX:
-                matchSuffix(pattern, word);
+                if(matchSuffix(pattern, word))
+                    matches++;
                 break;
             case EMBEDDED:
-                matchEmbedded(pattern, word);
+                if(matchEmbedded(pattern, word))
+                    matches;
                 break;
         }
 
     }
+    //cout << matches << endl;
     return (matches == 0) ? 1 : 0;
 }
 
@@ -103,7 +109,7 @@ bool matchWhole(string pattern, string word) {
  * @param word
  */
 bool matchPrefix(string pattern, string word) {
-    if(word.find(pattern) == 0 && word != pattern){
+    if(word.find(pattern) == 0){
         cout << word << endl;
         return true;
     }
@@ -116,8 +122,8 @@ bool matchPrefix(string pattern, string word) {
  * @param word
  */
 bool matchAnywhere(string pattern, string word) {
-    if(word.find(pattern) != string::npos && word != pattern){
-        cout << word << end;
+    if(word.find(pattern) != string::npos){
+        cout << word << endl;
         return true;
     }
     else return false;
