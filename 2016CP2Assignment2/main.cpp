@@ -103,7 +103,11 @@ bool matchWhole(string pattern, string word) {
  * @param word
  */
 bool matchPrefix(string pattern, string word) {
-
+    if(word.find(pattern) == 0 && word != pattern){
+        cout << word << endl;
+        return true;
+    }
+    else return false;
 }
 
 /**
@@ -112,7 +116,11 @@ bool matchPrefix(string pattern, string word) {
  * @param word
  */
 bool matchAnywhere(string pattern, string word) {
-
+    if(word.find(pattern) != string::npos && word != pattern){
+        cout << word << end;
+        return true;
+    }
+    else return false;
 }
 
 /**
