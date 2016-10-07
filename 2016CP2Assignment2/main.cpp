@@ -54,33 +54,57 @@ int main(int argc, char* argv[]) {
 
     string word;
     int matches = 0;
-
+    bool found = false;
+    
     //loops for each word
     while (cin >> word) {
 
         //divide and conquer - each mode has its own function.
         switch (mode) {
             case WHOLE:
-                if(matchWhole(pattern, word))
+                if(matchWhole(pattern, word)){
+                    found = true;
                     matches++;
+                }
                 break;
             case PREFIX:
-                if(matchPrefix(pattern, word))
+                if(matchPrefix(pattern, word)){
+                    found = true;
                     matches++;
+                }
                 break;
             case ANYWHERE:
-                if(matchAnywhere(pattern, word))
+                if(matchAnywhere(pattern, word)){
+                    found = true;
                     matches++;
+                }
                 break;
             case SUFFIX:
-                if(matchSuffix(pattern, word))
+                if(matchSuffix(pattern, word)){
+                    found = true;
                     matches++;
+                }
                 break;
             case EMBEDDED:
-                if(matchEmbedded(pattern, word))
+                if(matchEmbedded(pattern, word)){
+                    found = true;
                     matches++;
+                }
                 break;
         }
+        
+        if (reverse_match){
+            //cout << "reverse matching" << endl;
+            if(found) matches--;
+            else matches ++;
+            found = !found;
+        }
+        
+        if (found){
+            cout << word << endl;
+        }
+        
+        found = false;
 
     }
     //cout << matches << endl;
@@ -97,7 +121,6 @@ int main(int argc, char* argv[]) {
  */
 bool matchWhole(string pattern, string word) {
     if (pattern == word) {
-        cout << word << endl;
         return true;
     }
     else return false;
@@ -110,7 +133,6 @@ bool matchWhole(string pattern, string word) {
  */
 bool matchPrefix(string pattern, string word) {
     if(word.find(pattern) == 0){
-        cout << word << endl;
         return true;
     }
     else return false;
@@ -123,7 +145,6 @@ bool matchPrefix(string pattern, string word) {
  */
 bool matchAnywhere(string pattern, string word) {
     if(word.find(pattern) != string::npos){
-        cout << word << endl;
         return true;
     }
     else return false;
@@ -138,7 +159,6 @@ bool matchSuffix(string pattern, string word) {
     
     int biggestIndex = word.size() - pattern.size();
     if(word.find(pattern) == biggestIndex && biggestIndex >=0){
-        cout << word << endl;
         return true;
     }
     else return false;
@@ -151,7 +171,6 @@ bool matchSuffix(string pattern, string word) {
  */
 bool matchEmbedded(string pattern, string word) {
     if(pattern.find(word) != string::npos){
-        cout << word << endl;
         return true;
     }
     else return false;
