@@ -78,7 +78,7 @@ int main(int argc, char* argv[]) {
                 break;
             case EMBEDDED:
                 if(matchEmbedded(pattern, word))
-                    matches;
+                    matches++;
                 break;
         }
 
@@ -88,7 +88,7 @@ int main(int argc, char* argv[]) {
 }
 
 /**
- * Prints with cout words that exactly match pattern
+ * Prints  words that exactly match pattern
  * 
  * @param pattern
  * @param word
@@ -135,7 +135,13 @@ bool matchAnywhere(string pattern, string word) {
  * @param word
  */
 bool matchSuffix(string pattern, string word) {
-
+    
+    int biggestIndex = word.size() - pattern.size();
+    if(word.find(pattern) == biggestIndex && biggestIndex >=0){
+        cout << word << endl;
+        return true;
+    }
+    else return false;
 }
 
 /**
@@ -144,5 +150,9 @@ bool matchSuffix(string pattern, string word) {
  * @param word
  */
 bool matchEmbedded(string pattern, string word) {
-
+    if(pattern.find(word) != string::npos){
+        cout << word << endl;
+        return true;
+    }
+    else return false;
 }
