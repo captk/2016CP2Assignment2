@@ -9,9 +9,11 @@
 #include <string>
 #include <iostream>
 #include <unistd.h>
+#include <sstream>
 
 //need this to convert strings into lowercase
 #include <algorithm>
+#include <vector>
 
 using namespace std;
 bool matchWhole(string, string);
@@ -29,9 +31,11 @@ int main(int argc, char* argv[]) {
     } mode = WHOLE;
     bool reverse_match = false;
     bool case_sensitive = true;
+    bool length_constrained = false;
+    int strMin = 0, strMax = 0;
 
     int c;
-    while ((c = getopt(argc, argv, ":wpsaevi")) != -1) {
+    while ((c = getopt(argc, argv, ":wpsaevin:")) != -1) {
         switch (c) {
             case 'w': // pattern matches whole word
                 mode = WHOLE;
@@ -54,8 +58,44 @@ int main(int argc, char* argv[]) {
             case 'i': // disregard case of letters
                 case_sensitive = false;
                 break;
+            case 'n': // constrain length of matched words
+                //cout << "-n found" << endl;
+                length_constrained = true;
+                stringstream ss;
+                string strArr[3];
+                int counter = 0;
+                int num;
+                ss << optarg;
+                
+                while(getline(ss,strArr[counter],',')){
+                    counter++;
+                }
+                
+                ss.clear();
+                
+                if (counter > 0){
+                    if(strArr[0] != ""){
+                        ss << strArr[0];
+                        ss >> strMin;
+                    }
+                }
+                ss.clear();
+                
+                if (counter >= 1){
+                    //cout << "strArr[1]=" << strArr[1] << endl;
+                    if(strArr[1] != ""){
+                        ss << strArr[1];
+                        ss >> strMax;
+                        //cout << "strMax=" << strMax << endl;
+                    }
+                }
+                
+
+                break;
         }
     }
+    
+    //cout << "strMin=" << strMin << " strMax=" << strMax << endl;
     argc -= optind;
     argv += optind;
 
@@ -72,7 +112,7 @@ int main(int argc, char* argv[]) {
 
     //loops for each word
     while (cin >> word) {
-        
+
         oldWord = word;
         //convert word to lowercase if -i is used
         if (!case_sensitive) {
@@ -113,6 +153,7 @@ int main(int argc, char* argv[]) {
                 break;
         }
 
+        //deal with -r here
         if (reverse_match) {
             //cout << "reverse matching" << endl;
             if (found) matches--;
@@ -120,6 +161,14 @@ int main(int argc, char* argv[]) {
             found = !found;
         }
 
+        //deal with -n here
+        if ((word.size() < strMin && strMin != 0) || (word.size() > strMax && strMax != 0)){
+            //cout << "word is not the right size" << endl;
+            //cout << "word must be greater than " << strMin << " and less than "
+                    //<< strMax << " characters long" << endl;
+            found = false;
+        }
+        
         if (found) {
             cout << oldWord << endl;
         }
@@ -194,39 +243,43 @@ bool matchEmbedded(string pattern, string word) {
 
 /**
  * Find matches when wildcards are used
+ * 
  * @param pattern
  * @param word
+ *
  * @return starting index where match begins if match is found or string::npos
  * if no match is found.
  */
-size_t matchWildcards(string pattern, string word, char wildcard){
+size_t matchWildcards(string pattern, string word, char wildcard) {
     bool found = true;
-    
+
     //if pattern is bigger than word, then pattern is not inside word
     if (pattern.size() > word.size()) return string::npos;
-    
+
     //go through each 'sensible' letter of word and search for a match
     //'sensible' because we don't want to search the last index if patter is 
     //size 4, for example.
-    for (int i = 0; i <= word.size() - pattern.size(); i++){
+    for (int i = 0; i <= word.size() - pattern.size(); i++) {
+
         //cout << "word: " << word.size() << " pattern: " << pattern.size() << endl;
         //go through each letter in pattern and check with corresponding letter
         //in word and set found to false if mismatch is found
-        for (int j = 0; j < pattern.size(); j++){
-            if(!(word.at(i+j) == pattern.at(j) || pattern.at(j) == wildcard
-                    || word.at(i+j) == wildcard)){
+        for (int j = 0; j < pattern.size(); j++) {
+            if (!(word.at(i + j) == pattern.at(j) || pattern.at(j) == wildcard
+                    || word.at(i + j) == wildcard)) {
                 found = false;
             }
         }
-        
+
         //return index where match is found
-        if (found){
+        if (found) {
             return i;
         }
-        
+
         //need to reset found!
         found = true;
     }
+
     //cout << "cannot find " << pattern << " in " << word << endl;
     return string::npos;
 }
