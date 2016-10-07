@@ -19,6 +19,8 @@ bool matchPrefix(string, string);
 bool matchSuffix(string, string);
 bool matchAnywhere(string, string);
 bool matchEmbedded(string, string);
+size_t matchWildcards(string, string, char);
+char wildChar = '_';
 
 int main(int argc, char* argv[]) {
 
@@ -135,10 +137,11 @@ int main(int argc, char* argv[]) {
  * @param pattern
  * @param word
  * 
- * @return Notthing
+ * @return Nothing
  */
 bool matchWhole(string pattern, string word) {
-    if (pattern == word) {
+    if (matchWildcards(pattern, word, wildChar) != string::npos
+            && word.size() == pattern.size()) {
         return true;
     } else return false;
 }
@@ -149,7 +152,7 @@ bool matchWhole(string pattern, string word) {
  * @param word
  */
 bool matchPrefix(string pattern, string word) {
-    if (word.find(pattern) == 0) {
+    if (matchWildcards(pattern, word, wildChar) == 0) {
         return true;
     } else return false;
 }
@@ -160,7 +163,7 @@ bool matchPrefix(string pattern, string word) {
  * @param word
  */
 bool matchAnywhere(string pattern, string word) {
-    if (word.find(pattern) != string::npos) {
+    if (matchWildcards(pattern, word, wildChar) != string::npos) {
         return true;
     } else return false;
 }
@@ -173,7 +176,7 @@ bool matchAnywhere(string pattern, string word) {
 bool matchSuffix(string pattern, string word) {
 
     int biggestIndex = word.size() - pattern.size();
-    if (word.find(pattern) == biggestIndex && biggestIndex >= 0) {
+    if (matchWildcards(pattern, word, wildChar) == biggestIndex && biggestIndex >= 0) {
         return true;
     } else return false;
 }
@@ -184,7 +187,46 @@ bool matchSuffix(string pattern, string word) {
  * @param word
  */
 bool matchEmbedded(string pattern, string word) {
-    if (pattern.find(word) != string::npos) {
+    if (matchWildcards(word, pattern, wildChar) != string::npos) {
         return true;
     } else return false;
+}
+
+/**
+ * Find matches when wildcards are used
+ * @param pattern
+ * @param word
+ * @return starting index where match begins if match is found or string::npos
+ * if no match is found.
+ */
+size_t matchWildcards(string pattern, string word, char wildcard){
+    bool found = true;
+    
+    //if pattern is bigger than word, then pattern is not inside word
+    if (pattern.size() > word.size()) return string::npos;
+    
+    //go through each 'sensible' letter of word and search for a match
+    //'sensible' because we don't want to search the last index if patter is 
+    //size 4, for example.
+    for (int i = 0; i <= word.size() - pattern.size(); i++){
+        //cout << "word: " << word.size() << " pattern: " << pattern.size() << endl;
+        //go through each letter in pattern and check with corresponding letter
+        //in word and set found to false if mismatch is found
+        for (int j = 0; j < pattern.size(); j++){
+            if(!(word.at(i+j) == pattern.at(j) || pattern.at(j) == wildcard
+                    || word.at(i+j) == wildcard)){
+                found = false;
+            }
+        }
+        
+        //return index where match is found
+        if (found){
+            return i;
+        }
+        
+        //need to reset found!
+        found = true;
+    }
+    //cout << "cannot find " << pattern << " in " << word << endl;
+    return string::npos;
 }
