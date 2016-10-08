@@ -10,18 +10,22 @@
 #include <iostream>
 #include <unistd.h>
 #include <sstream>
+#include <vector>
 
 //need this to convert strings into lowercase
 #include <algorithm>
-#include <vector>
 
 using namespace std;
+
+//a function for each match method
 bool matchWhole(string, string);
 bool matchPrefix(string, string);
 bool matchSuffix(string, string);
 bool matchAnywhere(string, string);
 bool matchEmbedded(string, string);
 size_t matchWildcards(string, string, char);
+
+//wildcard character. May change scope or implementation later.
 char wildChar = '_';
 
 int main(int argc, char* argv[]) {
@@ -29,9 +33,13 @@ int main(int argc, char* argv[]) {
     enum MODE {
         WHOLE, PREFIX, SUFFIX, ANYWHERE, EMBEDDED
     } mode = WHOLE;
+    
+    //flags that may change execution path.
     bool reverse_match = false;
     bool case_sensitive = true;
     bool length_constrained = false;
+    
+    //variables to store arguments of the -n option.
     int strMin = 0, strMax = 0;
 
     int c;
@@ -59,20 +67,27 @@ int main(int argc, char* argv[]) {
                 case_sensitive = false;
                 break;
             case 'n': // constrain length of matched words
-                //cout << "-n found" << endl;
+                
                 length_constrained = true;
+                
                 stringstream ss;
-                string strArr[3];
+                string strArr[2];
+                
+                //counter for how many arguments are found
                 int counter = 0;
-                int num;
+                
+                //use stringstream to convert chars to int
                 ss << optarg;
                 
                 while(getline(ss,strArr[counter],',')){
                     counter++;
                 }
                 
+                //stream needs to be cleared!
                 ss.clear();
                 
+                //logic to extract arguments and put them in strMin and strMax
+                //when it makes sense.
                 if (counter > 0){
                     if(strArr[0] != ""){
                         ss << strArr[0];
@@ -82,11 +97,9 @@ int main(int argc, char* argv[]) {
                 ss.clear();
                 
                 if (counter >= 1){
-                    //cout << "strArr[1]=" << strArr[1] << endl;
                     if(strArr[1] != ""){
                         ss << strArr[1];
                         ss >> strMax;
-                        //cout << "strMax=" << strMax << endl;
                     }
                 }
                 
@@ -95,17 +108,17 @@ int main(int argc, char* argv[]) {
         }
     }
     
-    //cout << "strMin=" << strMin << " strMax=" << strMax << endl;
     argc -= optind;
     argv += optind;
 
     string pattern = argv[0];
 
-    //convert pattern to lowercase if -i is used
+    //convert pattern to lowercase if -i was an option
     if (!case_sensitive) {
         transform(pattern.begin(), pattern.end(), pattern.begin(), ::tolower);
     }
 
+    //oldWord stores original version of word
     string word, oldWord;
     int matches = 0;
     bool found = false;
@@ -122,71 +135,51 @@ int main(int argc, char* argv[]) {
         //divide and conquer - each mode has its own function.
         switch (mode) {
             case WHOLE:
-                if (matchWhole(pattern, word)) {
-                    found = true;
-                    matches++;
-                }
+                if (matchWhole(pattern, word)) found = true;
                 break;
             case PREFIX:
-                if (matchPrefix(pattern, word)) {
-                    found = true;
-                    matches++;
-                }
+                if (matchPrefix(pattern, word)) found = true;
                 break;
             case ANYWHERE:
-                if (matchAnywhere(pattern, word)) {
-                    found = true;
-                    matches++;
-                }
+                if (matchAnywhere(pattern, word)) found = true;
                 break;
             case SUFFIX:
-                if (matchSuffix(pattern, word)) {
-                    found = true;
-                    matches++;
-                }
+                if (matchSuffix(pattern, word)) found = true;
                 break;
             case EMBEDDED:
-                if (matchEmbedded(pattern, word)) {
-                    found = true;
-                    matches++;
-                }
+                if (matchEmbedded(pattern, word)) found = true;
                 break;
         }
 
         //deal with -r here
         if (reverse_match) {
-            //cout << "reverse matching" << endl;
-            if (found) matches--;
-            else matches++;
             found = !found;
         }
 
         //deal with -n here
-        if ((word.size() < strMin && strMin != 0) || (word.size() > strMax && strMax != 0)){
-            //cout << "word is not the right size" << endl;
-            //cout << "word must be greater than " << strMin << " and less than "
-                    //<< strMax << " characters long" << endl;
+        if ( (word.size() < strMin && strMin != 0) 
+                || (word.size() > strMax && strMax != 0) ){
             found = false;
         }
         
         if (found) {
             cout << oldWord << endl;
+            matches++;
         }
 
         found = false;
 
     }
-    //cout << matches << endl;
     return (matches == 0) ? 1 : 0;
 }
 
 /**
- * Prints  words that exactly match pattern
+ * Matches pattern to the whole word.
  * 
  * @param pattern
  * @param word
  * 
- * @return Nothing
+ * @return true if pattern matches the whole word. false if no match found.
  */
 bool matchWhole(string pattern, string word) {
     if (matchWildcards(pattern, word, wildChar) != string::npos
@@ -196,9 +189,12 @@ bool matchWhole(string pattern, string word) {
 }
 
 /**
+ * Matches patter to the start of the word
  * 
  * @param pattern
  * @param word
+ * 
+ * @return true if pattern matches to the start of word. false otherwise.
  */
 bool matchPrefix(string pattern, string word) {
     if (matchWildcards(pattern, word, wildChar) == 0) {
@@ -207,9 +203,12 @@ bool matchPrefix(string pattern, string word) {
 }
 
 /**
+ * Matches pattern to anywhere in word.
  * 
  * @param pattern
  * @param word
+ * 
+ * @return true if pattern can be found anywhere in word. false otherwise.
  */
 bool matchAnywhere(string pattern, string word) {
     if (matchWildcards(pattern, word, wildChar) != string::npos) {
@@ -218,9 +217,12 @@ bool matchAnywhere(string pattern, string word) {
 }
 
 /**
+ * Matches pattern to the end of word.
  * 
  * @param pattern
  * @param word
+ * 
+ * @return true if pattern constitutes the end of the word. false otherwise.
  */
 bool matchSuffix(string pattern, string word) {
 
@@ -231,9 +233,12 @@ bool matchSuffix(string pattern, string word) {
 }
 
 /**
+ * Matches word to anywhere inside of pattern.
  * 
  * @param pattern
  * @param word
+ * 
+ * @return true if word can be found anywhere inside of pattern. false otherwise.
  */
 bool matchEmbedded(string pattern, string word) {
     if (matchWildcards(word, pattern, wildChar) != string::npos) {
@@ -257,11 +262,10 @@ size_t matchWildcards(string pattern, string word, char wildcard) {
     if (pattern.size() > word.size()) return string::npos;
 
     //go through each 'sensible' letter of word and search for a match
-    //'sensible' because we don't want to search the last index if patter is 
+    //'sensible' because we don't want to search the last index if pattern is 
     //size 4, for example.
     for (int i = 0; i <= word.size() - pattern.size(); i++) {
 
-        //cout << "word: " << word.size() << " pattern: " << pattern.size() << endl;
         //go through each letter in pattern and check with corresponding letter
         //in word and set found to false if mismatch is found
         for (int j = 0; j < pattern.size(); j++) {
@@ -280,6 +284,6 @@ size_t matchWildcards(string pattern, string word, char wildcard) {
         found = true;
     }
 
-    //cout << "cannot find " << pattern << " in " << word << endl;
+    //return not found if no match is found for each 'sensible' letter in word.
     return string::npos;
 }
